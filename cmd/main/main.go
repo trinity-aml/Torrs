@@ -1,10 +1,11 @@
 package main
 
 import (
-	"flag"
+	//	"flag"
 	"log"
 	"os"
 	"path/filepath"
+	"torrsru/config"
 	"torrsru/db/search"
 	"torrsru/db/sync"
 	"torrsru/web"
@@ -19,12 +20,11 @@ func main() {
 	sync.Init()
 	search.UpdateIndex()
 
-	port := flag.String("port", "8093", "port for web")
+	port := config.ReadConfigParser("Port")
 
-	if port == nil {
-		p := "8093"
-		port = &p
+	if port == "" {
+		port = "8093"
 	}
 
-	web.Start(*port)
+	web.Start(port)
 }
