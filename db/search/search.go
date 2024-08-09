@@ -3,30 +3,54 @@ package search
 import (
 	"github.com/agnivade/levenshtein"
 	"strings"
-	"time"
 	"torrsru/db/sync"
+	"torrsru/db/utils"
 	"torrsru/models/fdb"
-	"unicode"
+	"torrsru/web/global"
 )
 
 var (
-	isUpdate   bool
-	lastUpdate time.Time
-	index      map[string]struct{}
+	index map[string]struct{}
 )
 
-func SetUpdate() { isUpdate = true }
+func FindTitle(query string) []*fdb.Torrent {
+	list := sync.ListTitles()
+	queryarr := strings.Split(utils.ClearStrSpace(query), " ")
+	find := map[string]struct{}{}
 
-func Find(query string, accurate bool) []*fdb.Torrent {
-	if lastUpdate.Add(time.Hour).Before(time.Now()) {
-		isUpdate = true
+	for _, name := range list {
+		isFound := true
+		for _, q := range queryarr {
+			if !strings.Contains(name, q) {
+				isFound = false
+				break
+			}
+		}
+
+		if isFound {
+			lastColon := strings.LastIndex(name, ":")
+			if lastColon != -1 {
+				name = name[:lastColon]
+			}
+			find[name] = struct{}{}
+		}
 	}
-	if isUpdate {
+
+	ret := []*fdb.Torrent{}
+	for ind := range find {
+		torrs := sync.GetTorrentsByName(ind)
+		ret = append(ret, torrs...)
+	}
+	return ret
+}
+
+func FindName(query string, accurate bool) []*fdb.Torrent {
+	if global.IsUpdateIndex {
 		UpdateIndex()
 	}
 
 	listRes := map[string]bool{}
-	query = cleanString(query)
+	query = utils.ClearStr(query)
 	for s, _ := range index {
 		if strings.Contains(s, query) {
 			listRes[s] = true
@@ -61,7 +85,7 @@ func Find(query string, accurate bool) []*fdb.Torrent {
 	var listTorr []*fdb.Torrent
 	for s, b := range listRes {
 		if b {
-			trs := sync.GetTorrents(s)
+			trs := sync.GetTorrentsByName(s)
 			listTorr = append(listTorr, trs...)
 		}
 	}
@@ -74,16 +98,5 @@ func UpdateIndex() {
 	for _, s := range list {
 		index[s] = struct{}{}
 	}
-	lastUpdate = time.Now()
-	isUpdate = false
-}
-
-func cleanString(input string) string {
-	var cleaned string
-	for _, char := range input {
-		if unicode.IsLetter(char) || unicode.IsDigit(char) {
-			cleaned += string(char)
-		}
-	}
-	return strings.ToLower(cleaned)
+	global.IsUpdateIndex = false
 }
