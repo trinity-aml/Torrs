@@ -2,6 +2,8 @@ package config
 
 import "github.com/ilyakaznacheev/cleanenv"
 
+const Bypass = "http://62.112.8.193:9117/sync/fdb/torrents?time="
+
 type ConfParser struct {
 	Port   string `yaml:"port"`
 	JacRed string `yaml:"jacred"`

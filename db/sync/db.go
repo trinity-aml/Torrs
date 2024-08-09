@@ -212,7 +212,7 @@ func saveTorrent(cols []*fdb.Collection) error {
 				if len(match) > 1 {
 					name = col.Key + ":" + match[1]
 				} else {
-					log.Println("Not yaer in torrent:", torr.Title)
+					log.Println("year is absent in torrent:", torr.Title)
 					name = col.Key + ":"
 				}
 				err = index.Put([]byte(name), nil)

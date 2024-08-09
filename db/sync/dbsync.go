@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -28,6 +29,7 @@ func StartSync() {
 }
 
 func syncDB() {
+	flag := ""
 	mu.Lock()
 	if isSync {
 		mu.Unlock()
@@ -45,12 +47,19 @@ func syncDB() {
 	for {
 		ftstr := strconv.FormatInt(filetime, 10)
 		log.Println("Fetch:", ftstr)
-		resp, err := http.Get(config.ReadConfigParser("JacRed") + "/sync/fdb/torrents?time=" + ftstr)
+		_, err := os.Stat("config.yml")
 		if err != nil {
+			if os.IsNotExist(err) {
+				flag = config.Bypass + ftstr
+			}
+		} else {
+			flag = config.ReadConfigParser("JacRed") + "/sync/fdb/torrents?time=" + ftstr
+		}
+		resp, err2 := http.Get(flag)
+		if err2 != nil {
 			log.Fatal("Error connect to fdb:", err)
 			return
 		}
-
 		var js *fdb.FDBRequest
 		err = json.NewDecoder(resp.Body).Decode(&js)
 		if err != nil {
