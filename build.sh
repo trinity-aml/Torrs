@@ -1,5 +1,7 @@
 #!/bin/bash
 
+go mod tidy
+
 echo "Generate static"
 go run ./cmd/genpages/gen_pages.go
 echo "Build..."

@@ -1,21 +1,56 @@
 package main
 
 import (
+	"fmt"
 	"github.com/alexflint/go-arg"
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
+	"torrsru/config"
 	"torrsru/db"
+	"torrsru/version"
 	"torrsru/web"
 	"torrsru/web/global"
 )
 
 func main() {
+	port := ""
+	ri := false
+	jac := ""
+
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	fmt.Println("=========== START ===========")
+	fmt.Println("Torrs", version.Version+",", runtime.Version()+",", "CPU Num:", runtime.NumCPU())
+
 	var args struct {
 		Port         string `default:"8094" arg:"-p" help:"port for http"`
 		RebuildIndex bool   `default:"false" arg:"-r" help:"rebuild index and exit"`
+		JacRed       string `default:"" arg:"-j" help:"alternative address JacRed"`
 	}
 	arg.MustParse(&args)
+
+	if config.ReadConfigParser("Port") != "" {
+		port = config.ReadConfigParser("Port")
+	} else {
+		port = args.Port
+	}
+	if config.ReadConfigParser("Rebuild") != "" {
+		ri = true
+	} else {
+		ri = args.RebuildIndex
+	}
+	if config.ReadConfigParser("JacRed") != "" {
+		jac = config.ReadConfigParser("JacRed")
+	} else {
+		jac = args.JacRed
+	}
+
+	fmt.Println("Port:", port)
+	fmt.Println("Rebuild index of base:", ri)
+	fmt.Println("Alternative JacRed address:", jac)
+
+	os.Setenv("JacRed", jac)
 
 	pwd := filepath.Dir(os.Args[0])
 	pwd, _ = filepath.Abs(pwd)
@@ -24,7 +59,7 @@ func main() {
 
 	db.Init()
 
-	if args.RebuildIndex {
+	if ri {
 		err := db.RebuildIndex()
 		if err != nil {
 			log.Println("Rebuild index error:", err)
@@ -34,5 +69,5 @@ func main() {
 		return
 	}
 
-	web.Start(args.Port)
+	web.Start(port)
 }
