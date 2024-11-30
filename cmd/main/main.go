@@ -35,7 +35,7 @@ func main() {
 	} else {
 		port = args.Port
 	}
-	if config.ReadConfigParser("Rebuild") != "" {
+	if config.ReadConfigParser("Rebuild") == "true" {
 		ri = true
 	} else {
 		ri = args.RebuildIndex
