@@ -7,8 +7,10 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 	"torrsru/config"
 	"torrsru/db"
+	"torrsru/utils"
 	"torrsru/version"
 	"torrsru/web"
 	"torrsru/web/global"
@@ -67,6 +69,14 @@ func main() {
 			log.Println("Rebuild index success")
 		}
 		return
+	}
+
+	if jac == "" {
+		jac = "http://62.112.8.193:9117"
+	}
+
+	for !utils.TestServer(jac) {
+		time.Sleep(10 * time.Second)
 	}
 
 	web.Start(port)
