@@ -52,6 +52,9 @@ func main() {
 	fmt.Println("Rebuild index of base:", ri)
 	fmt.Println("Alternative JacRed address:", jac)
 
+	if jac == "" {
+		jac = "http://62.112.8.193:9117"
+	}
 	os.Setenv("JacRed", jac)
 
 	pwd := filepath.Dir(os.Args[0])
@@ -69,10 +72,6 @@ func main() {
 			log.Println("Rebuild index success")
 		}
 		return
-	}
-
-	if jac == "" {
-		jac = "http://62.112.8.193:9117"
 	}
 
 	for !utils.TestServer(jac) {

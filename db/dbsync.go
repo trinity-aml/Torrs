@@ -28,7 +28,11 @@ func StartSync() {
 }
 
 func syncDB() {
-	path := ""
+	path := os.Getenv("JacRed")
+	if path == "" {
+		log.Fatal("Error get JacRed link from env variable!")
+		return
+	}
 	mu.Lock()
 	if isSync {
 		mu.Unlock()
@@ -47,12 +51,7 @@ func syncDB() {
 		ftstr := strconv.FormatInt(filetime, 10)
 		t := time.Unix(ft2sec(filetime), 0)
 		log.Println("Fetch:", t.Format("2006-01-02 15:04:05"))
-		if os.Getenv("JacRed") == "" {
-			path = "http://62.112.8.193:9117/sync/fdb/torrents?time=" + ftstr
-		} else {
-			path = os.Getenv("JacRed") + "/sync/fdb/torrents?time=" + ftstr
-		}
-		resp, err := http.Get(path)
+		resp, err := http.Get(path + "/sync/fdb/torrents?time=" + ftstr)
 		if err != nil {
 			log.Fatal("Error connect to fdb:", err)
 			return
