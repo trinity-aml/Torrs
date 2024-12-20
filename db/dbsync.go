@@ -11,8 +11,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"torrsru/global"
 	"torrsru/models/fdb"
-	"torrsru/web/global"
 )
 
 var (
@@ -42,7 +42,6 @@ func syncDB() {
 	defer func() { isSync = false }()
 
 	filetime := GetFileTime()
-	lastft := filetime
 
 	mu.Unlock()
 	start := time.Now()
@@ -98,9 +97,7 @@ func syncDB() {
 			gcCount = 0
 		}
 	}
-	if lastft != filetime {
-		global.IsUpdateIndex = true
-	}
+
 	fmt.Println("End sync", time.Since(start))
 }
 
