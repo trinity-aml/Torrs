@@ -21,6 +21,7 @@ func main() {
 	port := ""
 	ri := false
 	jac := ""
+	bypass := ""
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	fmt.Println("=========== START ===========")
@@ -29,7 +30,8 @@ func main() {
 	var args struct {
 		Port         string `default:"8094" arg:"-p" help:"port for http"`
 		RebuildIndex bool   `default:"false" arg:"-r" help:"rebuild index and exit"`
-		JacRed       string `default:"" arg:"-j" help:"alternative address JacRed"`
+		JacRed       string `default:"http://62.112.8.193:9117" arg:"-j" help:"address JacRed"`
+		Bypass       string `default:"https://www.google.com" arg:"-k" help:"address to test internet connection"`
 		TMDBProxy    bool   `default:"false" arg:"--tmdb" help:"proxy for TMDB"`
 		TGBotToken   string `default:"" arg:"--token" help:"telegram bot token"`
 		TGHost       string `default:"http://127.0.0.1:8081" arg:"--tgapi" help:"telegram api host"`
@@ -52,10 +54,16 @@ func main() {
 	} else {
 		jac = args.JacRed
 	}
+	if config.ReadConfigParser("Bypass") != "" {
+		bypass = config.ReadConfigParser("Bypass")
+	} else {
+		bypass = args.Bypass
+	}
 
 	fmt.Println("Port:", port)
 	fmt.Println("Rebuild index of base:", ri)
-	fmt.Println("Alternative JacRed address:", jac)
+	fmt.Println("JacRed address:", jac)
+	fmt.Println("Address to test internet connection:", bypass)
 
 	if jac == "" {
 		jac = "http://62.112.8.193:9117"
@@ -92,6 +100,10 @@ func main() {
 			log.Println("Start Telegram bot error:", err)
 			os.Exit(1)
 		}
+	}
+
+	for !utils.TestServer(bypass) {
+		time.Sleep(10 * time.Second)
 	}
 
 	for !utils.TestServer(jac) {

@@ -1,6 +1,8 @@
 module torrsru
 
-go 1.22.0
+go 1.23
+
+toolchain go1.23.3
 
 require (
 	github.com/alexflint/go-arg v1.5.1
@@ -10,9 +12,9 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/telegram-mini-apps/init-data-golang v1.3.0
-	go.etcd.io/bbolt v1.3.8
+	go.etcd.io/bbolt v1.4.0
 	golang.org/x/crypto v0.14.0
-	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde
+	golang.org/x/sync v0.10.0
 	gopkg.in/telebot.v4 v4.0.0-beta.4
 )
 
@@ -59,7 +61,7 @@ require (
 	github.com/willf/bitset v1.1.10 // indirect
 	golang.org/x/arch v0.5.0 // indirect
 	golang.org/x/net v0.16.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
