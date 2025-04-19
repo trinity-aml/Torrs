@@ -52,8 +52,10 @@ func syncDB() {
 		log.Println("Fetch:", t.Format("2006-01-02 15:04:05"))
 		resp, err := http.Get(path + "/sync/fdb/torrents?time=" + ftstr)
 		if err != nil {
-			log.Fatal("Error connect to fdb:", err)
-			return
+			log.Println("Error connect to fdb:", err)
+			log.Println("Waiting 10 minutes before retrying...")
+			time.Sleep(time.Minute * 10)
+			continue
 		}
 
 		var js *fdb.FDBRequest

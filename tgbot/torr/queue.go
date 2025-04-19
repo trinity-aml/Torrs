@@ -25,35 +25,50 @@ func Start() {
 	manager.Start()
 }
 
-func Show(c tele.Context) error {
-	//msg := ""
-	//mu.Lock()
-	//for i, dlQueue := range queue {
-	//	s := "#" + strconv.Itoa(i+1) + ":\n<b>Хэш:</b> <code>" + dlQueue.hash + "</code>\n<i>" + filepath.Base(dlQueue.fileName) + "</i>\n"
-	//	if len(msg+s) > 1024 {
-	//		err := c.Send(msg)
-	//		if err != nil {
-	//			return err
-	//		}
-	//		msg = ""
-	//	}
-	//	msg += s
-	//}
-	//mu.Unlock()
-	//if msg != "" {
-	//	return c.Send("Очередь:\n" + msg)
-	//} else {
-	//	return c.Send("Очередь пуста")
-	//}
+func ShowQueue(c tele.Context) error {
+	msg := ""
+	manager.queueLock.Lock()
+	defer manager.queueLock.Unlock()
+	if len(manager.queue) == 0 && len(manager.working) == 0 {
+		return c.Send("Очередь пуста")
+	}
+	if len(manager.working) > 0 {
+		msg += "Закачиваются:\n"
+		i := 0
+		for _, dlQueue := range manager.working {
+			s := "#" + strconv.Itoa(i+1) + ": <code>" + dlQueue.torrentHash + "</code>\n"
+			if len(msg+s) > 1024 {
+				c.Send(msg)
+				msg = ""
+			}
+			msg += s
+			i++
+		}
+		if len(msg) > 0 {
+			c.Send(msg)
+			msg = ""
+		}
+	}
+	if len(manager.queue) > 0 {
+		msg = "В очереди:\n"
+		for i, dlQueue := range manager.queue {
+			s := "#" + strconv.Itoa(i+1) + ": <code>" + dlQueue.torrentHash + "</code>\n"
+			if len(msg+s) > 1024 {
+				c.Send(msg)
+				msg = ""
+			}
+			msg += s
+		}
+		if len(msg) > 0 {
+			c.Send(msg)
+			msg = ""
+		}
+	}
 	return nil
 }
 
-func AddAll(c tele.Context, hash string) {
-	manager.Add(c, hash, "all")
-}
-
-func Add(c tele.Context, hash, fileID string) {
-	manager.Add(c, hash, "file:"+fileID)
+func AddRange(c tele.Context, hash string, from, to int) {
+	manager.AddRange(c, hash, from, to)
 }
 
 func Cancel(id int) {
@@ -61,6 +76,9 @@ func Cancel(id int) {
 }
 
 func updateLoadStatus(wrk *Worker, file *TorrFile, fi, fc int) {
+	if wrk.msg == nil {
+		return
+	}
 	ti, err := GetTorrentInfo(wrk.torrentHash)
 	if err != nil {
 		wrk.c.Bot().Edit(wrk.msg, "Ошибка при получении данных о торренте")
@@ -98,6 +116,8 @@ func updateLoadStatus(wrk *Worker, file *TorrFile, fi, fc int) {
 		}
 		if file.offset >= file.size {
 			msg += "\n<b>Завершение загрузки, это займет некоторое время</b>"
+			wrk.c.Bot().Edit(wrk.msg, msg)
+			return
 		}
 
 		torrKbd := &tele.ReplyMarkup{}
