@@ -1,10 +1,7 @@
 package web
 
 import (
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	"log"
-	"path/filepath"
 	"strings"
 	ss "sync"
 	"time"
@@ -12,6 +9,9 @@ import (
 	"torrsru/global"
 	"torrsru/web/api"
 	"torrsru/web/static"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 func Start(port string) {
@@ -26,8 +26,7 @@ func Start(port string) {
 
 	global.Route = gin.New()
 	global.Route.Use(gin.Recovery(), cors.New(corsCfg), blockUsers())
-	static.RouteStaticFiles(global.Route)
-	global.Route.LoadHTMLGlob(filepath.Join(global.PWD, "views/*.go.html"))
+	static.RouteEmbedFiles(global.Route)
 	api.SetRoutes(global.Route)
 
 	err := global.Route.Run(":" + port)
