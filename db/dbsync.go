@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -40,11 +41,16 @@ func syncDB() {
 	mu.Unlock()
 	start := time.Now()
 	gcCount := 0
+	host, ok := os.LookupEnv("FDBHOST")
+	if !ok {
+		log.Println("FDBHOST environment variable not set")
+		os.Exit(1)
+	}
 	for {
 		ftstr := strconv.FormatInt(filetime, 10)
 		t := time.Unix(ft2sec(filetime), 0)
 		log.Println("Fetch:", t.Format("2006-01-02 15:04:05"))
-		resp, err := http.Get("http://62.112.8.193:9117/sync/fdb/torrents?time=" + ftstr)
+		resp, err := http.Get("http://" + host + "/sync/fdb/torrents?time=" + ftstr)
 		if err != nil {
 			log.Println("Error connect to fdb:", err)
 			log.Println("Waiting 10 minutes before retrying...")
