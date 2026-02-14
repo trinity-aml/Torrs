@@ -41,7 +41,7 @@ set_gomips() {
   fi
 }
 
-GOBIN="go"
+GOBIN="/usr/local/go/bin/go"
 
 $GOBIN version
 
@@ -52,7 +52,7 @@ OUTPUT="${ROOT}/dist/torrs"
 
 #### Build web
 echo "Generate static"
-go run ./cmd/genpages/gen_pages.go
+$GOBIN run ./cmd/genpages/gen_pages.go
 
 #### Build
 rm -fr ./dist/*
@@ -88,8 +88,8 @@ declare -a COMPILERS=(
   "amd64:x86_64-linux-android21-clang"
 )
 
-export NDK_VERSION="27.2.12479018" # 27.2.12479018
-export NDK_TOOLCHAIN="${PWD}/../../android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64"
+export NDK_VERSION="27.3.13750724"
+export NDK_TOOLCHAIN="${PWD}/../../android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64"
 
 GOOS=android
 
