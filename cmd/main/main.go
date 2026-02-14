@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/alexflint/go-arg"
 	"log"
 	"os"
 	"path/filepath"
@@ -15,6 +14,8 @@ import (
 	"torrsru/utils"
 	"torrsru/version"
 	"torrsru/web"
+
+	"github.com/alexflint/go-arg"
 )
 
 func main() {
@@ -30,7 +31,7 @@ func main() {
 	var args struct {
 		Port         string `default:"8094" arg:"-p" help:"port for http"`
 		RebuildIndex bool   `default:"false" arg:"-r" help:"rebuild index and exit"`
-		JacRed       string `default:"http://62.112.8.193:9117" arg:"-j" help:"address JacRed"`
+		JacRed       string `default:"https://jacred.xyz" arg:"-j" help:"address JacRed"`
 		Bypass       string `default:"https://www.google.com" arg:"-k" help:"address to test internet connection"`
 		TMDBProxy    bool   `default:"false" arg:"--tmdb" help:"proxy for TMDB"`
 		TGBotToken   string `default:"" arg:"--token" help:"telegram bot token"`
