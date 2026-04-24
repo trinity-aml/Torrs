@@ -7,6 +7,8 @@ import (
 	"torrsru/global"
 )
 
+const defaultTMDBBearerToken = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2MDBjYTlmZTIxYjJiMzk3MDY5OGRiNjJkNTc1OGUzOSIsInN1YiI6IjViMjJhYmJjMGUwYTI2NGRiODAxYzQ3MyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.NUqczMBJjZKycUKrRZxsNTrea8DS80GwX1T0VnY_O_A"
+
 func TMDBAPI(c *gin.Context) {
 	token, ok := tmdbToken(c)
 	if !ok {
@@ -65,6 +67,9 @@ func tmdbToken(c *gin.Context) (string, bool) {
 		return "", false
 	}
 	token := strings.TrimSpace(global.TMDBToken)
+	if token == "" {
+		token = defaultTMDBBearerToken
+	}
 	if token == "" {
 		c.String(http.StatusServiceUnavailable, "TMDB bearer token is not configured")
 		return "", false
