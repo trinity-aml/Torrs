@@ -20,6 +20,7 @@
 # Go workspace file
 go.work
 /dist/
+/Dist/
 /go_build_torrsru_cmd_main
 /torrents.db
 /settings.yaml
