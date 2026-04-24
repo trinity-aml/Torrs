@@ -117,7 +117,7 @@ func localOnly(c *gin.Context) bool {
 		host = c.Request.RemoteAddr
 	}
 	ip := net.ParseIP(host)
-	if ip == nil || !ip.IsLoopback() {
+	if ip == nil || (!ip.IsLoopback() && !ip.IsPrivate()) {
 		c.AbortWithStatus(http.StatusForbidden)
 		return false
 	}

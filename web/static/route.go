@@ -40,4 +40,10 @@ func RouteEmbedFiles(route *gin.Engine) {
 		panic(err)
 	}
 	route.StaticFS("/st", http.FS(subFS))
+
+	imgFS, err := fs.Sub(staticFS, "files/img")
+	if err != nil {
+		panic(err)
+	}
+	route.StaticFS("/img", http.FS(imgFS))
 }
