@@ -1,0 +1,7 @@
+port: "8094"
+fdb_host: ""
+tmdb_proxy: false
+tmdb_bearer_token: ""
+telegram_bot_token: ""
+telegram_api_host: "http://127.0.0.1:8081"
+torrserver_host: "http://127.0.0.1:8090"

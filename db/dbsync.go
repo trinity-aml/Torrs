@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -41,16 +40,16 @@ func syncDB() {
 	mu.Unlock()
 	start := time.Now()
 	gcCount := 0
-	host, ok := os.LookupEnv("FDBHOST")
-	if !ok {
-		log.Println("FDBHOST environment variable not set")
-		os.Exit(1)
+	host := strings.TrimSpace(global.FDBHost)
+	if host == "" {
+		log.Println("FDBHOST is not configured, sync skipped")
+		return
 	}
 	for {
 		ftstr := strconv.FormatInt(filetime, 10)
 		t := time.Unix(ft2sec(filetime), 0)
 		log.Println("Fetch:", t.Format("2006-01-02 15:04:05"))
-		resp, err := http.Get("http://" + host + "/sync/fdb/torrents?time=" + ftstr)
+		resp, err := http.Get(fdbSyncURL(host, ftstr))
 		if err != nil {
 			log.Println("Error connect to fdb:", err)
 			log.Println("Waiting 10 minutes before retrying...")
@@ -120,4 +119,12 @@ func ft2sec(ft int64) int64 {
 	//#define TICKS_PER_SECOND 10000000
 	//#define EPOCH_DIFFERENCE 11644473600LL
 	return ft/10000000 - 11644473600
+}
+
+func fdbSyncURL(host, fileTime string) string {
+	host = strings.TrimRight(host, "/")
+	if strings.HasPrefix(host, "http://") || strings.HasPrefix(host, "https://") {
+		return host + "/sync/fdb/torrents?time=" + fileTime
+	}
+	return "http://" + host + "/sync/fdb/torrents?time=" + fileTime
 }

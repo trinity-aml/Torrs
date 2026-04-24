@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru" data-bs-theme="dark">
+
+<head>
+    {{template "head.go.html"}}
+</head>
+
+<body>
+{{template "jslinks.go.html"}}
+
+<div style="max-width: 980px;padding-bottom: 56px" class="container-sm">
+    <div class="d-flex align-items-center justify-content-between" style="margin: 24px 0">
+        <h1 class="h3">Настройки Torrs</h1>
+        <a class="btn btn-outline-secondary" href="/">Поиск</a>
+    </div>
+
+    <div class="alert alert-warning">
+        Страница доступна только с localhost. Настройки сохраняются в YAML. Порт, Telegram token/API host и включение бота требуют перезапуска процесса.
+    </div>
+
+    <div class="mb-3">
+        <label for="config-path" class="form-label">YAML файл</label>
+        <input id="config-path" type="text" class="form-control" readonly>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label for="port" class="form-label">HTTP порт</label>
+            <input id="port" type="text" class="form-control">
+        </div>
+        <div class="col-md-8 mb-3">
+            <label for="fdb-host" class="form-label">FDBHOST</label>
+            <input id="fdb-host" type="text" class="form-control" placeholder="host:port или http://host:port">
+        </div>
+    </div>
+
+    <div class="form-check form-switch mb-3">
+        <input id="tmdb-proxy" class="form-check-input" type="checkbox" role="switch">
+        <label class="form-check-label" for="tmdb-proxy">Включить TMDB proxy</label>
+    </div>
+
+    <div class="mb-3">
+        <label for="tmdb-token" class="form-label">TMDB Bearer token</label>
+        <input id="tmdb-token" type="password" class="form-control" autocomplete="new-password">
+        <div class="form-text">Можно вставить как сам JWT, так и строку с префиксом Bearer.</div>
+    </div>
+
+    <div class="mb-3">
+        <label for="telegram-token" class="form-label">Telegram bot token</label>
+        <input id="telegram-token" type="password" class="form-control" autocomplete="new-password">
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="telegram-api-host" class="form-label">Telegram API host</label>
+            <input id="telegram-api-host" type="text" class="form-control">
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="torrserver-host" class="form-label">TorrServer host</label>
+            <input id="torrserver-host" type="text" class="form-control">
+        </div>
+    </div>
+
+    <button id="save" class="btn btn-success btn-lg" onclick="saveSettings()">Сохранить</button>
+    <span id="status" class="text-muted" style="margin-left: 12px"></span>
+
+    {{template "toast.go.html"}}
+</div>
+
+{{template "bottom.go.html" .}}
+
+<script>
+    const secretMask = "********";
+
+    $(window).ready(function () {
+        loadSettings();
+    });
+
+    function loadSettings() {
+        $.get("/api/settings").done(function (data) {
+            const s = data.settings;
+            $("#config-path").val(data.path);
+            $("#port").val(s.port);
+            $("#fdb-host").val(s.fdb_host);
+            $("#tmdb-proxy").prop("checked", s.tmdb_proxy);
+            $("#tmdb-token").val(s.tmdb_bearer_token_set ? secretMask : "");
+            $("#telegram-token").val(s.telegram_bot_token_set ? secretMask : "");
+            $("#telegram-api-host").val(s.telegram_api_host);
+            $("#torrserver-host").val(s.torrserver_host);
+        }).fail(function (xhr) {
+            toast(xhr.responseText || "Не удалось загрузить настройки");
+        });
+    }
+
+    function saveSettings() {
+        $("#save").prop("disabled", true);
+        $("#status").text("Сохранение...");
+        const data = {
+            port: $("#port").val(),
+            fdb_host: $("#fdb-host").val(),
+            tmdb_proxy: $("#tmdb-proxy").is(":checked"),
+            tmdb_bearer_token: $("#tmdb-token").val(),
+            telegram_bot_token: $("#telegram-token").val(),
+            telegram_api_host: $("#telegram-api-host").val(),
+            torrserver_host: $("#torrserver-host").val(),
+        };
+        $.ajax({
+            url: "/api/settings",
+            type: "POST",
+            data: JSON.stringify(data),
+            contentType: "application/json; charset=utf-8",
+        }).done(function (data) {
+            $("#status").text(data.message || "Сохранено");
+            toast(data.message || "Настройки сохранены");
+            loadSettings();
+        }).fail(function (xhr) {
+            $("#status").text("");
+            toast(xhr.responseText || "Ошибка сохранения настроек");
+        }).always(function () {
+            $("#save").prop("disabled", false);
+        });
+    }
+
+    function toast(msg) {
+        $("#toastBody").text(msg);
+        $("#toast").toast("show");
+    }
+</script>
+</body>
+
+</html>

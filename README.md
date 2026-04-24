@@ -70,6 +70,26 @@
 
 `torrs --help` выдаст все доступные параметры.
 
+### Настройки
+
+При первом запуске рядом с исполняемым файлом создается `settings.yaml`. В репозитории есть пример `settings.yaml.example`.
+
+Основные параметры:
+
+```yaml
+port: "8094"
+fdb_host: ""
+tmdb_proxy: false
+tmdb_bearer_token: ""
+telegram_bot_token: ""
+telegram_api_host: "http://127.0.0.1:8081"
+torrserver_host: "http://127.0.0.1:8090"
+```
+
+Путь к файлу можно задать через `--config`. CLI-параметры переопределяют YAML только на текущий запуск. `FDBHOST` из окружения используется только как fallback, если `fdb_host` не указан в YAML.
+
+Административная страница настроек доступна по `/settings` только с localhost.
+
 # Сборка Telegram Bot Api
 Чтобы бот мог загружать файлы больше `50мб` и не более `2гб`, нужно собрать `telegram bot api`
 

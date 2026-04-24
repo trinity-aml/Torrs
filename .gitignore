@@ -22,6 +22,7 @@ go.work
 /dist/
 /go_build_torrsru_cmd_main
 /torrents.db
+/settings.yaml
 /.idea/
 /index.db/
 /tgbotapi/
