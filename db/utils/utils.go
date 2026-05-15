@@ -7,28 +7,32 @@ import (
 )
 
 func ClearStr(str string) string {
-	ret := ""
 	str = strings.ToLower(strings.TrimSpace(str))
+	var b strings.Builder
+	b.Grow(len(str))
 	for _, r := range str {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			ret += string(r)
+			b.WriteRune(r)
 		}
 	}
-	return ret
+	return b.String()
 }
 
 func ClearStrSpace(str string) string {
-	ret := ""
 	str = strings.ToLower(strings.TrimSpace(str))
+	var b strings.Builder
+	b.Grow(len(str))
+	var last rune = -1
 	for _, r := range str {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			ret += string(r)
-		} else if len(ret) > 0 && ret[len(ret)-1] != ' ' {
-			ret += " "
+			b.WriteRune(r)
+			last = r
+		} else if last != -1 && last != ' ' {
+			b.WriteByte(' ')
+			last = ' '
 		}
 	}
-
-	return ret
+	return b.String()
 }
 
 func I2B(num int64) []byte {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -15,8 +14,9 @@ import (
 )
 
 var (
-	mu     sync.Mutex
-	isSync bool
+	mu       sync.Mutex
+	isSync   bool
+	syncHTTP = &http.Client{Timeout: 10 * time.Minute}
 )
 
 func StartSync() {
@@ -33,13 +33,16 @@ func syncDB() {
 		return
 	}
 	isSync = true
-	defer func() { isSync = false }()
+	mu.Unlock()
+	defer func() {
+		mu.Lock()
+		isSync = false
+		mu.Unlock()
+	}()
 
 	filetime := GetFileTime()
 
-	mu.Unlock()
 	start := time.Now()
-	gcCount := 0
 	host := strings.TrimSpace(global.FDBHost)
 	if host == "" {
 		log.Println("FDBHOST is not configured, sync skipped")
@@ -49,7 +52,7 @@ func syncDB() {
 		ftstr := strconv.FormatInt(filetime, 10)
 		t := time.Unix(ft2sec(filetime), 0)
 		log.Println("Fetch:", t.Format("2006-01-02 15:04:05"))
-		resp, err := http.Get(fdbSyncURL(host, ftstr))
+		resp, err := syncHTTP.Get(fdbSyncURL(host, ftstr))
 		if err != nil {
 			log.Println("Error connect to fdb:", err)
 			log.Println("Waiting 10 minutes before retrying...")
@@ -59,11 +62,11 @@ func syncDB() {
 
 		var js *fdb.FDBRequest
 		err = json.NewDecoder(resp.Body).Decode(&js)
+		resp.Body.Close()
 		if err != nil {
 			log.Fatal("Error decode json:", err)
 			return
 		}
-		resp.Body.Close()
 
 		err = saveTorrents(js.Collections)
 		if err != nil {
@@ -88,14 +91,10 @@ func syncDB() {
 		t = time.Unix(ft2sec(filetime), 0)
 		log.Println("Save:", t.Format("2006-01-02 15:04:05"), ", Torrents:", torrents)
 
-		if !js.Nextread {
-			break
-		}
+		nextread := js.Nextread
 		js = nil
-		gcCount++
-		if gcCount > 10 {
-			runtime.GC()
-			gcCount = 0
+		if !nextread {
+			break
 		}
 	}
 

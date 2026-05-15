@@ -64,36 +64,58 @@ func SetFileTime(fileTime int64) error {
 }
 
 func saveTorrents(cols []*fdb.Collection) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		torrsb, err := tx.CreateBucketIfNotExists([]byte("Torrents"))
-		if err != nil {
-			return err
-		}
+	const chunkSize = 500
 
-		//save and indexTorrentTitle torrents
-		batch := indexTorrentTitle.NewBatch()
-		for _, col := range cols {
-			for _, torr := range col.Value.Torrents {
+	batch := indexTorrentTitle.NewBatch()
+	chunk := make([]*fdb.Torrent, 0, chunkSize)
+
+	flush := func() error {
+		if len(chunk) == 0 {
+			return nil
+		}
+		err := db.Update(func(tx *bolt.Tx) error {
+			torrsb, err := tx.CreateBucketIfNotExists([]byte("Torrents"))
+			if err != nil {
+				return err
+			}
+			for _, torr := range chunk {
 				hash := torr.GetUnique()
-				tb := torrsb.Bucket(hash)
-				if tb != nil {
+				if tb := torrsb.Bucket(hash); tb != nil {
 					ttmp, err := readTorrent(torrsb, hash)
 					if err != nil {
 						return err
 					}
 					torr = combineTorrents([]*fdb.Torrent{ttmp, torr})
 				}
-				err = saveTorrent(torrsb, torr)
-				if err != nil {
+				if err := saveTorrent(torrsb, torr); err != nil {
 					return err
 				}
+				if err := batch.Index(hex.EncodeToString(hash), torr.Title); err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		chunk = chunk[:0]
+		if err := indexTorrentTitle.Batch(batch); err != nil {
+			return err
+		}
+		batch.Reset()
+		return nil
+	}
 
-				err = batch.Index(hex.EncodeToString(hash), torr.Title)
-				if err != nil {
+	for _, col := range cols {
+		for _, torr := range col.Value.Torrents {
+			chunk = append(chunk, torr)
+			if len(chunk) >= chunkSize {
+				if err := flush(); err != nil {
 					return err
 				}
 			}
 		}
-		return indexTorrentTitle.Batch(batch)
-	})
+	}
+	return flush()
 }

@@ -341,30 +341,34 @@ func combineTorrents(torrents []*fdb.Torrent) *fdb.Torrent {
 	return combined
 }
 
-// Функция для удаления дубликатов из массива строк
 func uniqueStringArray(arr []string) []string {
-	uniqueMap := make(map[string]struct{})
-	uniqueArr := []string{}
-
-	for _, str := range arr {
-		if _, found := uniqueMap[str]; !found {
-			uniqueMap[str] = struct{}{}
-			uniqueArr = append(uniqueArr, str)
-		}
+	if len(arr) < 2 {
+		return arr
 	}
-	return uniqueArr
+	seen := make(map[string]struct{}, len(arr))
+	out := arr[:0]
+	for _, s := range arr {
+		if _, ok := seen[s]; ok {
+			continue
+		}
+		seen[s] = struct{}{}
+		out = append(out, s)
+	}
+	return out
 }
 
-// Функция для удаления дубликатов из массива int64
 func uniqueInt64Array(arr []int64) []int64 {
-	uniqueMap := make(map[int64]struct{})
-	uniqueArr := []int64{}
-
-	for _, val := range arr {
-		if _, found := uniqueMap[val]; !found {
-			uniqueMap[val] = struct{}{}
-			uniqueArr = append(uniqueArr, val)
-		}
+	if len(arr) < 2 {
+		return arr
 	}
-	return uniqueArr
+	seen := make(map[int64]struct{}, len(arr))
+	out := arr[:0]
+	for _, v := range arr {
+		if _, ok := seen[v]; ok {
+			continue
+		}
+		seen[v] = struct{}{}
+		out = append(out, v)
+	}
+	return out
 }

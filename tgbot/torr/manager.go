@@ -107,21 +107,18 @@ func (m *Manager) AddRange(c tele.Context, hash string, from, to int) {
 func (m *Manager) Cancel(id int) {
 	m.queueLock.Lock()
 	defer m.queueLock.Unlock()
-	var rem []int
 	for i, w := range m.queue {
 		if w.id == id {
 			w.isCancelled = true
-			w.c.Bot().Delete(w.msg)
-			rem = append(rem, i)
+			if w.msg != nil {
+				w.c.Bot().Delete(w.msg)
+			}
+			m.queue = append(m.queue[:i], m.queue[i+1:]...)
 			return
 		}
 	}
-	for _, i := range rem {
-		m.queue = append(m.queue[:i], m.queue[i+1:]...)
-	}
 	if wrk, ok := m.working[id]; ok {
 		wrk.isCancelled = true
-		return
 	}
 }
 

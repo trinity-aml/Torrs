@@ -2,7 +2,6 @@ package torr
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -21,20 +20,19 @@ type TorrentDetails struct {
 	Magnet  string
 }
 
+var infoHTTPClient = &http.Client{Timeout: 30 * time.Second}
+
 func GetTorrentInfo(hash string) (*state.TorrentStatus, error) {
 	link := global.TSHost + "/stream?stat&link=" + url.QueryEscape(hash)
-	resp, err := http.Get(link)
+	resp, err := infoHTTPClient.Get(link)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	buf, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
 
 	var ti *state.TorrentStatus
-
-	err = json.Unmarshal(buf, &ti)
-	return ti, err
+	if err := json.NewDecoder(resp.Body).Decode(&ti); err != nil {
+		return nil, err
+	}
+	return ti, nil
 }

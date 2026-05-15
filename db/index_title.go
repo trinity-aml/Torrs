@@ -41,6 +41,7 @@ func RebuildIndex() error {
 			return nil
 		}
 
+		const batchFlushSize = 10000
 		batch := indexTorrentTitle.NewBatch()
 		indexedTorrents := 0
 		err := torrsB.ForEach(func(uniTorr, _ []byte) error {
@@ -50,22 +51,19 @@ func RebuildIndex() error {
 			}
 
 			title := string(torrB.Get([]byte("title")))
-
-			if title != "" {
-				if batch.Size() >= 100000 {
-					err := indexTorrentTitle.Batch(batch)
-					if err != nil {
-						return err
-					}
-					indexedTorrents += batch.Size()
-					log.Println("Indexed torrents:", indexedTorrents)
-					batch = indexTorrentTitle.NewBatch()
-				} else {
-					err := batch.Index(hex.EncodeToString(uniTorr), title)
-					if err != nil {
-						return err
-					}
+			if title == "" {
+				return nil
+			}
+			if err := batch.Index(hex.EncodeToString(uniTorr), title); err != nil {
+				return err
+			}
+			if batch.Size() >= batchFlushSize {
+				if err := indexTorrentTitle.Batch(batch); err != nil {
+					return err
 				}
+				indexedTorrents += batch.Size()
+				log.Println("Indexed torrents:", indexedTorrents)
+				batch.Reset()
 			}
 			return nil
 		})

@@ -14,6 +14,21 @@ import (
 
 var ERR_STOPPED = errors.New("stopped")
 
+var streamHTTPClient = &http.Client{
+	Transport: &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		MaxIdleConns:          16,
+		MaxIdleConnsPerHost:   4,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ResponseHeaderTimeout: 5 * time.Minute,
+		ExpectContinueTimeout: 1 * time.Second,
+	},
+}
+
 type TorrFile struct {
 	hash   string
 	name   string
@@ -37,19 +52,7 @@ func NewTorrFile(wrk *Worker, tfile *state.TorrentFileStat) (*TorrFile, error) {
 	tf.size = tfile.Length
 
 	link := global.TSHost + "/stream?link=" + url.QueryEscape(wrk.torrentHash) + "&index=" + strconv.Itoa(tfile.Id) + "&play"
-	c := &http.Client{
-		Transport: &http.Transport{
-			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-			}).DialContext,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ResponseHeaderTimeout: 5 * time.Minute,
-			ExpectContinueTimeout: 1 * time.Second,
-		},
-	}
-
-	resp, err := c.Get(link)
+	resp, err := streamHTTPClient.Get(link)
 	if err != nil {
 		return nil, err
 	}
